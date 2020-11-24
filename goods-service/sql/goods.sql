@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS `goods`(
+   `id` INT UNSIGNED AUTO_INCREMENT,
+   `name` VARCHAR(64) NOT NULL,
+   `price` INT NOT NULL,
+   `label` VARCHAR(128) ,
+   PRIMARY KEY ( `id` )
+);

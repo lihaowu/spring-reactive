@@ -1,10 +1,26 @@
 package com.binecy.bean;
 
+import javax.persistence.*;
+
+@Table(name = "goods")
+@Entity
 public class Goods {
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private long id;
     private String name;
-    private int price;
+    private Integer price;
     private String label;
+
+    public Goods() {
+    }
+
+    public Goods(long id, String name, int price, String label) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.label = label;
+    }
 
     public long getId() {
         return id;
@@ -36,5 +52,15 @@ public class Goods {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    @Override
+    public String toString() {
+        return "Goods{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", label='" + label + '\'' +
+                '}';
     }
 }

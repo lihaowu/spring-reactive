@@ -26,11 +26,10 @@
         <scope>import</scope>
       </dependency>
 
-
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.1.RELEASE</version>
+        <version>2.3.5.RELEASE</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -50,11 +49,31 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source >8</source>
+          <source>8</source>
           <target>8</target>
         </configuration>
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+  <!--  <repository>
+      <id>spring</id>
+      <url>https://maven.aliyun.com/repository/spring</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>-->
+
+    <!--        这个仓库必须注释掉 否则打包 war 的时候 ， 会报错 'repositories.repository.id' must be unique -->
+    <repository>
+        <id>spring-milestones</id>
+        <name>Spring Milestones</name>
+        <url>https://repo.spring.io/milestone</url>
+    </repository>
+  </repositories>
 
 </project>

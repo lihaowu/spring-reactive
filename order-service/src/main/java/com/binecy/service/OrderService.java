@@ -46,7 +46,7 @@ public class OrderService {
             setResult(rs, order);
         });
 
-        ListenableFuture<ResponseEntity<List<Goods>>> goodsFuture = restTemplate.exchange("http://goods-service/goods/?ids=1,2,3", HttpMethod.GET,  null, new ParameterizedTypeReference<List<Goods>>(){});
+        ListenableFuture<ResponseEntity<List<Goods>>> goodsFuture = restTemplate.exchange("http://goods-service/goods/mock/list?ids=1,2,3", HttpMethod.GET,  null, new ParameterizedTypeReference<List<Goods>>(){});
         goodsFuture.addCallback(res -> {
             order.setGoods(res.getBody());
             setResult(rs, order);
@@ -95,7 +95,7 @@ public class OrderService {
             System.out.println("user>>" + u);
             return    WebClient.create()
                     .get()
-                    .uri("http://localhost:9002/goods/list?ids=1,2,3&label=" + u.getLabel())
+                    .uri("http://localhost:9002/goods/mock/list?ids=1,2,3&label=" + u.getLabel())
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Goods>>(){})
                     .onErrorReturn(errGoodsRes);
@@ -121,7 +121,7 @@ public class OrderService {
 
         Mono<List<Goods>> goodsMono =  WebClient.create()
                 .get()
-                .uri("http://localhost:9002/goods/list?ids=1,2,3")
+                .uri("http://localhost:9002/goods/mock/list?ids=1,2,3")
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<Goods>>(){})
                 .onErrorReturn(errGoodsRes);

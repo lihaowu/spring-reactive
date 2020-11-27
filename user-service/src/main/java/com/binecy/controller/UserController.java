@@ -5,6 +5,7 @@ import com.binecy.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -32,5 +33,11 @@ public class UserController {
     @PostMapping
     public Mono<Boolean>  post(@RequestBody User user) {
         return userService.post(user);
+    }
+
+
+    @PostMapping("/stream")
+    public Mono<RecordId>  addStreamUser(@RequestBody User user) {
+        return userService.addStreamUser(user);
     }
 }

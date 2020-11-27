@@ -23,7 +23,7 @@ public class RedisConfig {
         builder.key(StringRedisSerializer.UTF_8);
         builder.value(RedisSerializer.json());
         builder.hashKey(StringRedisSerializer.UTF_8);
-        builder.hashValue(RedisSerializer.json());
+        builder.hashValue(StringRedisSerializer.UTF_8);
 
         return builder.build();
     }

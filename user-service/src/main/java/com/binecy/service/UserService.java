@@ -5,15 +5,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.ReactiveHashOperations;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
+import org.springframework.data.redis.stream.StreamListener;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 @Service
 public class UserService {
@@ -47,4 +53,12 @@ public class UserService {
     }
 
 
+    // ---------- stream
+    public Mono<RecordId> addStreamUser(User u) {
+        String streamKey = "channel:stream:user";//stream key
+        ObjectRecord<String, User> record = ObjectRecord.create(streamKey, u);
+        Mono<RecordId> mono = redisTemplate.opsForStream().add(record);
+        return mono;
+    }
 }
+

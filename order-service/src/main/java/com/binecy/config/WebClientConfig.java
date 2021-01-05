@@ -17,6 +17,11 @@ public class WebClientConfig {
 
 
     @Bean
+    public WebClient webClient(WebClient.Builder builder) {
+        return builder.build();
+    }
+
+    @Bean
     @LoadBalanced
     public AsyncRestTemplate restTemplate() {
         Netty4ClientHttpRequestFactory factory = new Netty4ClientHttpRequestFactory();

@@ -4,8 +4,13 @@ import java.util.List;
 
 public class Order {
     private long id;
+    private long userId;
+    private List<Long> goodsIds;
     private User user;
     private List<Goods> goods;
+
+    public Order() {
+    }
 
     public Order(long id) {
         this.id = id;
@@ -33,5 +38,21 @@ public class Order {
 
     public void setGoods(List<Goods> goods) {
         this.goods = goods;
+    }
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
+        this.userId = userId;
+    }
+
+    public List<Long> getGoodsIds() {
+        return goodsIds;
+    }
+
+    public void setGoodsIds(List<Long> goodsIds) {
+        this.goodsIds = goodsIds;
     }
 }

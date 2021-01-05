@@ -41,6 +41,7 @@
     <module>goods-service</module>
     <module>user-service</module>
     <module>order-service</module>
+    <module>delivery-service</module>
   </modules>
 
   <build>

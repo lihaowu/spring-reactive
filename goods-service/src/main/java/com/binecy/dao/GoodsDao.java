@@ -23,8 +23,8 @@ public interface GoodsDao extends CrudRepository<Goods, Long> , JpaSpecification
     @Query(SELECT_GOODS_SQL + "where name = :name and (label = :#{#label}  or :#{#label} is null)")
     List<Goods> find(@Param("name") String name , @Param("label") String label);
 
-    @Query(value = SELECT_GOODS_SQL + "where name = ?1 #{#label? and label = }")
-    List<Goods> find2(@Param("name") String name, @Param("label") String label);
+//    @Query(value = SELECT_GOODS_SQL + "where name = ?1 #{#label? and label = }")
+//    List<Goods> find2(@Param("name") String name, @Param("label") String label);
 
 //    @Query("update Goods set name = :#{#newVal.name}, price = :#{#newVal.name} where id = :#{#newVal.id}")
 //    void update(@Param("newVal") Goods goods);

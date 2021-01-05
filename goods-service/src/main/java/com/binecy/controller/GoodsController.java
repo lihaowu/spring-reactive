@@ -44,7 +44,7 @@ public class GoodsController {
     }
 
     @GetMapping("/mock/list")
-    public List<Goods> mockList(@RequestParam String ids, @RequestParam String label) {
+    public List<Goods> mockList(@RequestParam String ids, @RequestParam(required = false) String label) {
         String[] idArr = ids.split(",");
         return goodsService.mockList(idArr, label);
     }

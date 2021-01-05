@@ -24,11 +24,8 @@ public class GoodsService {
     }
 
     public Goods getById(long id) {
-
-        Optional<Goods> goods = goodsDao.findById(1L);
-        return goods.orElseGet(() -> {
-            return null;
-        });
+        Optional<Goods> goods = goodsDao.findById(id);
+        return goods.orElse(null);
     }
 
 //    public List<Goods> getByLabel(String label) {

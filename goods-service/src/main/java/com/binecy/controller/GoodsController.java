@@ -17,26 +17,6 @@ public class GoodsController {
     @Autowired
     private GoodsService goodsService;
 
-    @PostMapping("/")
-    public Goods add(@RequestBody Goods goods) {
-        return goodsService.add(goods);
-    }
-
-    @GetMapping("/{id}")
-    public Goods getById(@PathVariable long id) {
-        return goodsService.getById(id);
-    }
-
-    @DeleteMapping("/{id}")
-    public void del(@PathVariable long id) {
-        goodsService.del(id);
-    }
-
-    @GetMapping("/")
-    public List<Goods> get(@RequestParam String name,
-                           @RequestParam(required = false) String label) {
-        return goodsService.get(name, label);
-    }
 
     @GetMapping("/mock/{id}")
     public Goods mockById(@PathVariable long id) {

@@ -5,15 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.web.config.EnableSpringDataWebSupport;
+
 
 @EnableDiscoveryClient
 @SpringBootApplication
-@EnableJpaRepositories("com.binecy.dao")
 @EntityScan("com.binecy.bean")
-@EnableSpringDataWebSupport
-public class GoodsServiceApplication {
+public class GoodsServiceServlet {
 
     // https://juejin.cn/post/6854818586947649549
     // https://blog.csdn.net/zpwangshisuifeng/article/details/92421625
@@ -23,7 +20,7 @@ public class GoodsServiceApplication {
     public static void main( String[] args )
     {
         new SpringApplicationBuilder(
-                GoodsServiceApplication.class)
+                GoodsServiceServlet.class)
                 .web(WebApplicationType.SERVLET).run(args);
     }
 }

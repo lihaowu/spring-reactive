@@ -2,27 +2,27 @@ package com.binecy.controller;
 
 import com.binecy.bean.Order;
 import com.binecy.service.OrderService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/order")
 public class OrderController {
-    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
-
     @Autowired
     private OrderService service;
 
     @GetMapping("/{id}")
-    public Mono<Order> get(@PathVariable long id) {
+    public Mono<Order> getById(@PathVariable long id) {
         return service.getOrder(id);
+    }
+
+    @GetMapping("/")
+    public Mono<Order> get(@RequestParam long id, @RequestParam long warehouseId, @RequestParam List<Long> goodIds) {
+        return service.getOrder(id, warehouseId, goodIds);
     }
 
     @GetMapping("/label/{id}")
@@ -37,6 +37,4 @@ public class OrderController {
         service.getOrderByRest(rs, id);
         return rs;
     }
-
-
 }

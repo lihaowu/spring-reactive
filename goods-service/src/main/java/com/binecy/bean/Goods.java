@@ -1,12 +1,6 @@
 package com.binecy.bean;
 
-import javax.persistence.*;
-
-@Table(name = "goods")
-@Entity
 public class Goods {
-    @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private long id;
     private String name;
     private Integer price;

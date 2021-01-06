@@ -3,49 +3,33 @@ package com.binecy.bean;
 import java.util.List;
 
 public class Order {
-    private long id;
-    private long userId;
+    private Long id;
+    private Long warehouseId;
     private List<Long> goodsIds;
-    private User user;
+    private Warehouse warehouse;
     private List<Goods> goods;
 
     public Order() {
     }
 
-    public Order(long id) {
+    public Order(Long id) {
         this.id = id;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Long getWarehouseId() {
+        return warehouseId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public List<Goods> getGoods() {
-        return goods;
-    }
-
-    public void setGoods(List<Goods> goods) {
-        this.goods = goods;
-    }
-
-    public long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(long userId) {
-        this.userId = userId;
+    public void setWarehouseId(Long warehouseId) {
+        this.warehouseId = warehouseId;
     }
 
     public List<Long> getGoodsIds() {
@@ -54,5 +38,21 @@ public class Order {
 
     public void setGoodsIds(List<Long> goodsIds) {
         this.goodsIds = goodsIds;
+    }
+
+    public Warehouse getWarehouse() {
+        return warehouse;
+    }
+
+    public void setWarehouse(Warehouse warehouse) {
+        this.warehouse = warehouse;
+    }
+
+    public List<Goods> getGoods() {
+        return goods;
+    }
+
+    public void setGoods(List<Goods> goods) {
+        this.goods = goods;
     }
 }

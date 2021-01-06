@@ -2,7 +2,7 @@ package com.binecy.service;
 
 import com.binecy.bean.Goods;
 import com.binecy.bean.Order;
-import com.binecy.bean.User;
+import com.binecy.bean.Warehouse;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,20 +12,18 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.client.AsyncRestTemplate;
-import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @RefreshScope
 @Service
@@ -38,47 +36,24 @@ public class OrderService {
     @Autowired
     private AsyncRestTemplate restTemplate;
 
-    private static final User errUserRes = new User();
-    private static final List<Goods> errGoodsRes = new ArrayList<>();
     public void getOrderByRest(DeferredResult<Order> rs, long orderId) {
-        Order order = getOrder();
-        ListenableFuture<ResponseEntity<User>> userLister = restTemplate.getForEntity("http://user-service/user/mock/" + order.getUserId(), User.class);
-        /*userFuture.addCallback((res) -> {
-            order.setUser(res.getBody());
-            setResult(rs, order);
-        }, (e) -> {
-            logger.error("get user err", e);
-            order.setUser(errUserRes);
-            setResult(rs, order);
-        });*/
-
-
+        Order order = mockOrder(orderId);
+        ListenableFuture<ResponseEntity<Warehouse>> warehouseLister = restTemplate.getForEntity("http://warehouse-service/warehouse/mock/" + order.getWarehouseId(), Warehouse.class);
         ListenableFuture<ResponseEntity<List<Goods>>> goodsLister =
                 restTemplate.exchange("http://goods-service/goods/mock/list?ids=" + StringUtils.join(order.getGoodsIds(), ","),
                         HttpMethod.GET,  null, new ParameterizedTypeReference<List<Goods>>(){});
-        /*goodsFuture.addCallback(res -> {
-            order.setGoods(res.getBody());
-            setResult(rs, order);
-        }, e -> {
-            logger.error("list goods err", e);
-            order.setGoods(errGoodsRes);
-            setResult(rs, order);
-        });*/
-
-
-        CompletableFuture<ResponseEntity<User>> userFuture = userLister.completable().exceptionally(err -> {
-            logger.warn("get user err", err);
-            return new ResponseEntity(new User(), HttpStatus.OK);
+        CompletableFuture<ResponseEntity<Warehouse>> warehouseFuture = warehouseLister.completable().exceptionally(err -> {
+            logger.warn("get warehouse err", err);
+            return new ResponseEntity(new Warehouse(), HttpStatus.OK);
         });
         CompletableFuture<ResponseEntity<List<Goods>>> goodsFuture = goodsLister.completable().exceptionally(err -> {
             logger.warn("get goods err", err);
             return new ResponseEntity(new ArrayList<>(), HttpStatus.OK);
         });
-        userFuture.thenCombineAsync(goodsFuture, (userRes, goodsRes)-> {
-//            Order order = new Order(orderId);
-                order.setUser(userRes.getBody());
-
-                order.setGoods(goodsRes.getBody().subList(0, 5));
+        warehouseFuture.thenCombineAsync(goodsFuture, (warehouseRes, goodsRes)-> {
+                order.setWarehouse(warehouseRes.getBody());
+                List<Goods> goods = goodsRes.getBody().stream().filter(g -> g.getPrice() > 10).limit(5).collect(Collectors.toList());
+                order.setGoods(goods);
             return order;
         }).whenCompleteAsync((o, err)-> {
             if(err != null) {
@@ -88,70 +63,56 @@ public class OrderService {
         });
 
         // 阻塞
-//        try {
-//
-//            ResponseEntity<User> user = userFuture.get();
-//            ResponseEntity<List<Goods>> goodsRes = goodsFuture.get();
-//
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//        }
-    }
+        /*try {
 
-    private void setResult(DeferredResult<Order> rs, Order order) {
-        if(order.getGoods() == null) {
-            return;
-        }
+            ResponseEntity<Warehouse> warehouse = warehouseFuture.get();
+            ResponseEntity<List<Goods>> goodsRes = goodsFuture.get();
 
-        if(order.getUser() == null) {
-            return;
-        }
-        rs.setResult(order);
-        return;
-    }
-
-    private Order getOrder() {
-        return new Order();
+        } catch (Exception e) {
+            logger.error("get result err", e);
+        }*/
     }
 
     public Mono<Order> getOrderInLabel(long orderId) {
-        Mono<Order> order = mockOrder(orderId);
+        Mono<Order> order = mockOrderMono(orderId);
 
-        return order.zipWhen(o -> getMono("http://localhost:9003/user/mock/" + o.getUserId(), User.class), (o, u) -> {
-            o.setUser(u);
+        return order.zipWhen(o -> getMono("http://warehouse-service/warehouse/mock/" + o.getWarehouseId(), Warehouse.class), (o, w) -> {
+            o.setWarehouse(w);
             return o;
-        }).zipWhen(o -> getFlux("http://localhost:9002/goods/mock/list?ids=" +
-                        StringUtils.join(o.getGoodsIds(), ","), Goods.class).collectList(), (o, gs) -> {
+        }).zipWhen(o -> getFlux("http://goods-service/goods/mock/list?ids=" +
+                        StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel() , Goods.class).collectList(), (o, gs) -> {
             o.setGoods(gs);
             return o;
         });
     }
 
-    public Mono<Order> getOrder(long orderId, long userId, List<Long> goodsIds) {
-        Mono<Order> order = mockOrder(orderId);
+    public Mono<Order> getOrder(long orderId, long warehouseId, List<Long> goodsIds) {
+        Mono<Order> orderMono = mockOrderMono(orderId);
 
-        return order.zipWith(getMono("http://localhost:9003/user/mock/" + userId, User.class), (o,u) -> {
-            o.setUser(u);
+        return orderMono.zipWith(getMono("http://warehouse-service/warehouse/mock/" + warehouseId, Warehouse.class), (o,w) -> {
+            o.setWarehouse(w);
             return o;
-        }).zipWith(getFlux("http://localhost:9002/goods/mock/list?ids=" +
-                StringUtils.join(goodsIds, ","), Goods.class).take(5).collectList(), (o, gs) -> {
+        }).zipWith(getFlux("http://goods-service/goods/mock/list?ids=" +
+                StringUtils.join(goodsIds, ","), Goods.class).filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
             o.setGoods(gs);
             return o;
         });
     }
 
     public Mono<Order> getOrder(long orderId) {
-        Mono<Order> order = mockOrder(orderId);
+        Mono<Order> orderMono = mockOrderMono(orderId);
 
-        return order.flatMap(o -> {
-            Mono<User> userMono =  getMono("http://user-service/user/mock/" + o.getUserId(), User.class).onErrorReturn(new User());
+        return orderMono.flatMap(o -> {
+            Mono<Warehouse> warehouseMono =  getMono("http://warehouse-service/warehouse/mock/"+ o.getWarehouseId(),
+                    Warehouse.class).onErrorReturn(new Warehouse());
             Flux<Goods> goodsFlux = getFlux("http://goods-service/goods/mock/list?ids=" +
-                    StringUtils.join(o.getGoodsIds(), ","), Goods.class).onErrorReturn(new Goods());
+                    StringUtils.join(o.getGoodsIds(), ","), Goods.class)
+                    .filter(g -> g.getPrice() > 10)
+                    .take(5)
+                    .onErrorReturn(new Goods());
 
-            return userMono.zipWith(goodsFlux.collectList(), (u, gs) -> {
-                o.setUser(u);
+            return warehouseMono.zipWith(goodsFlux.collectList(), (u, gs) -> {
+                o.setWarehouse(u);
                 o.setGoods(gs);
                 return o;
             });
@@ -175,16 +136,19 @@ public class OrderService {
                 .bodyToFlux(resType);
     }
 
-    private Mono<Order> mockOrder(long orderId) {
+    private Mono<Order> mockOrderMono(long orderId) {
+        return Mono.just(mockOrder(orderId));
+    }
 
+    private Order mockOrder(long orderId) {
         Order o = new Order(orderId);
-        o.setUserId(1L);
+        o.setWarehouseId(1L);
 
         List<Long> goodsIds = new ArrayList<>();
-        goodsIds.add(1L);
-        goodsIds.add(2L);
-        goodsIds.add(3L);
+        for(long i = 0; i < 10; i++) {
+            goodsIds.add(i);
+        }
         o.setGoodsIds(goodsIds);
-        return Mono.just(o);
+        return o;
     }
 }

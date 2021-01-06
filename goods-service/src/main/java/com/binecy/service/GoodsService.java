@@ -5,10 +5,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class GoodsService {
 
+    private Random random = new Random();
     public Goods mock(long id) {
         try {
             Thread.sleep(1000 * 2);
@@ -18,6 +20,7 @@ public class GoodsService {
         Goods goods = new Goods();
         goods.setId(id);
         goods.setName("a");
+        goods.setPrice(random.nextInt(30));
         return goods;
     }
 
@@ -33,6 +36,7 @@ public class GoodsService {
             goods.setId(Long.parseLong(id));
             goods.setName("a");
             goods.setLabel(label);
+            goods.setPrice(random.nextInt(30));
             result.add(goods);
         }
 

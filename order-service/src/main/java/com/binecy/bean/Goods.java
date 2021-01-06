@@ -3,7 +3,7 @@ package com.binecy.bean;
 public class Goods {
     private long id;
     private String name;
-    private int price;
+    private Integer price;
     private String label;
 
 

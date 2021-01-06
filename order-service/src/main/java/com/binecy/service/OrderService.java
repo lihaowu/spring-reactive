@@ -80,7 +80,10 @@ public class OrderService {
             o.setWarehouse(w);
             return o;
         }).zipWhen(o -> getFlux("http://goods-service/goods/mock/list?ids=" +
-                        StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel() , Goods.class).collectList(), (o, gs) -> {
+                        StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel() , Goods.class)
+                .filter(g -> g.getPrice() > 10)
+                .take(5)
+                .collectList(), (o, gs) -> {
             o.setGoods(gs);
             return o;
         });
@@ -93,7 +96,10 @@ public class OrderService {
             o.setWarehouse(w);
             return o;
         }).zipWith(getFlux("http://goods-service/goods/mock/list?ids=" +
-                StringUtils.join(goodsIds, ","), Goods.class).filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
+                StringUtils.join(goodsIds, ","), Goods.class)
+                .filter(g -> g.getPrice() > 10)
+                .take(5)
+                .collectList(), (o, gs) -> {
             o.setGoods(gs);
             return o;
         });

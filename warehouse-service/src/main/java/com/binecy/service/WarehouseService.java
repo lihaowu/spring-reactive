@@ -14,6 +14,7 @@ public class WarehouseService {
         Warehouse warehouse = new Warehouse();
         warehouse.setId(id);
         warehouse.setName("天下第一仓");
+        warehouse.setLabel("一级仓");
         return warehouse;
     }
 }

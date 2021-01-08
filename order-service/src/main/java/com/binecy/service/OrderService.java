@@ -34,13 +34,13 @@ public class OrderService {
     private WebClient webClient;
 
     @Autowired
-    private AsyncRestTemplate restTemplate;
+    private AsyncRestTemplate asyncRestTemplate;
 
     public void getOrderByRest(DeferredResult<Order> rs, long orderId) {
         Order order = mockOrder(orderId);
-        ListenableFuture<ResponseEntity<Warehouse>> warehouseLister = restTemplate.getForEntity("http://warehouse-service/warehouse/mock/" + order.getWarehouseId(), Warehouse.class);
+        ListenableFuture<ResponseEntity<Warehouse>> warehouseLister = asyncRestTemplate.getForEntity("http://warehouse-service/warehouse/mock/" + order.getWarehouseId(), Warehouse.class);
         ListenableFuture<ResponseEntity<List<Goods>>> goodsLister =
-                restTemplate.exchange("http://goods-service/goods/mock/list?ids=" + StringUtils.join(order.getGoodsIds(), ","),
+                asyncRestTemplate.exchange("http://goods-service/goods/mock/list?ids=" + StringUtils.join(order.getGoodsIds(), ","),
                         HttpMethod.GET,  null, new ParameterizedTypeReference<List<Goods>>(){});
         CompletableFuture<ResponseEntity<Warehouse>> warehouseFuture = warehouseLister.completable().exceptionally(err -> {
             logger.warn("get warehouse err", err);
@@ -52,7 +52,9 @@ public class OrderService {
         });
         warehouseFuture.thenCombineAsync(goodsFuture, (warehouseRes, goodsRes)-> {
                 order.setWarehouse(warehouseRes.getBody());
-                List<Goods> goods = goodsRes.getBody().stream().filter(g -> g.getPrice() > 10).limit(5).collect(Collectors.toList());
+                List<Goods> goods = goodsRes.getBody().stream()
+                        .filter(g -> g.getPrice() > 10).limit(5)
+                        .collect(Collectors.toList());
                 order.setGoods(goods);
             return order;
         }).whenCompleteAsync((o, err)-> {
@@ -74,16 +76,14 @@ public class OrderService {
     }
 
     public Mono<Order> getOrderInLabel(long orderId) {
-        Mono<Order> order = mockOrderMono(orderId);
+        Mono<Order> orderMono = mockOrderMono(orderId);
 
-        return order.zipWhen(o -> getMono("http://warehouse-service/warehouse/mock/" + o.getWarehouseId(), Warehouse.class), (o, w) -> {
+        return orderMono.zipWhen(o -> getMono("http://warehouse-service/warehouse/mock/" + o.getWarehouseId(), Warehouse.class), (o, w) -> {
             o.setWarehouse(w);
             return o;
         }).zipWhen(o -> getFlux("http://goods-service/goods/mock/list?ids=" +
-                        StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel() , Goods.class)
-                .filter(g -> g.getPrice() > 10)
-                .take(5)
-                .collectList(), (o, gs) -> {
+                StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel(), Goods.class)
+                .filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
             o.setGoods(gs);
             return o;
         });
@@ -92,14 +92,12 @@ public class OrderService {
     public Mono<Order> getOrder(long orderId, long warehouseId, List<Long> goodsIds) {
         Mono<Order> orderMono = mockOrderMono(orderId);
 
-        return orderMono.zipWith(getMono("http://warehouse-service/warehouse/mock/" + warehouseId, Warehouse.class), (o,w) -> {
+        return orderMono.zipWith(getMono("http://warehouse-service/warehouse/mock/" + warehouseId, Warehouse.class), (o, w) -> {
             o.setWarehouse(w);
             return o;
         }).zipWith(getFlux("http://goods-service/goods/mock/list?ids=" +
                 StringUtils.join(goodsIds, ","), Goods.class)
-                .filter(g -> g.getPrice() > 10)
-                .take(5)
-                .collectList(), (o, gs) -> {
+                .filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
             o.setGoods(gs);
             return o;
         });
@@ -129,17 +127,30 @@ public class OrderService {
     private <T> Mono<T> getMono(String url, Class<T> resType) {
         return webClient
                 .get()
+
                 .uri(url)
                 .retrieve()
-                .bodyToMono(resType);
+                .bodyToMono(resType).doOnNext(s -> {
+                    logger.info("response s -> {}", s);
+                })
+                ;
+
     }
 
     private <T> Flux<T> getFlux(String url, Class<T> resType) {
         return webClient
                 .get()
                 .uri(url)
+
                 .retrieve()
-                .bodyToFlux(resType);
+
+                .bodyToFlux(resType)
+
+                .doOnNext(s -> {
+                    logger.info("response s -> {}", s);
+                })
+
+                ;
     }
 
     private Mono<Order> mockOrderMono(long orderId) {

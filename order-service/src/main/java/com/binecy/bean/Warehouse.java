@@ -52,4 +52,15 @@ public class Warehouse {
     public void setLat(String lat) {
         this.lat = lat;
     }
+
+    @Override
+    public String toString() {
+        return "Warehouse{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", label='" + label + '\'' +
+                ", lon='" + lon + '\'' +
+                ", lat='" + lat + '\'' +
+                '}';
+    }
 }

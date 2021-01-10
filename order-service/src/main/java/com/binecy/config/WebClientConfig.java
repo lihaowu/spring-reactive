@@ -38,7 +38,7 @@ public class WebClientConfig {
                 }, (res, err) -> {
                     log.error("err on response:{}", res.uri(), err);
                 })
-                .responseTimeout(Duration.ofMillis(100))  // 超时
+//                .responseTimeout(Duration.ofMillis(100))  // 超时
                 ;
 
 

@@ -55,6 +55,17 @@ public class FluxBase {
         });
     }
 
+    @Test
+    public void parallel() throws InterruptedException {
+        Flux.range(0, 100)
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .subscribe(i -> {
+                    System.out.println(Thread.currentThread().getName() + " -> " + i);
+                });
+        new CountDownLatch(1).await();
+    }
+
 
     @Test
     public void publishOn() {
@@ -99,7 +110,7 @@ public class FluxBase {
                 } catch (InterruptedException e) {
                 }
             }
-        }, FluxSink.OverflowStrategy.LATEST)
+        }, FluxSink.OverflowStrategy.ERROR)
 
                 .publishOn(Schedulers.newSingle("receiver"), 10)
                 .subscribe(new BaseSubscriber<Integer>() {
@@ -121,4 +132,6 @@ public class FluxBase {
                 });
         new CountDownLatch(1).await();
     }
+
+
 }

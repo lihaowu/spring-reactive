@@ -1,16 +1,20 @@
 package com.binecy;
 
+import org.junit.Test;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 public class FluxPushPullTest {
-    public static void main(String[] args) throws InterruptedException {
+    @Test
+    public void base() throws InterruptedException {
         MessageProcessor messageProcessor = new MessageProcessor();
         Flux<String> bridge = Flux.create(sink -> {
             messageProcessor.setHandler((msg) -> {
@@ -36,9 +40,9 @@ public class FluxPushPullTest {
             }
         });
         for (int i = 0; i < 10000; i++) {
-            messageProcessor.addMessge("msg-" + i);
+            messageProcessor.addMessage("msg-" + i);
             if(i % 5 == 0) {
-                messageProcessor.addLowMessge("logMsg-" + i);
+                messageProcessor.addLowMessage("logMsg-" + i);
             }
             Thread.sleep(100);
         }
@@ -48,23 +52,24 @@ public class FluxPushPullTest {
 
 class MessageProcessor {
     private Consumer<String> msgHandler;
+
     // 忽略线程安全
     private List<String> lowMsg = new ArrayList<>();
-
 
     void setHandler(Consumer<String> h) {
         this.msgHandler = h;
     }
 
-    void addMessge(String msg) {
+    void addMessage(String msg) {
         msgHandler.accept(msg);
     }
 
-    void addLowMessge(String msg) {
+    void addLowMessage(String msg) {
         lowMsg.add(msg);
     }
 
     List<String> getLowMsg() {
         return lowMsg;
     }
+
 }

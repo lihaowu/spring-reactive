@@ -2,21 +2,39 @@ package com.binecy.controller;
 
 import com.binecy.bean.Order;
 import com.binecy.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/order")
 public class OrderController {
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+
+
     @Autowired
     private OrderService service;
 
     @GetMapping("/{id}")
     public Mono<Order> getById(@PathVariable long id) {
+        return service.getOrder(id);
+    }
+
+    @GetMapping("/mayerr/{id}")
+
+    public Mono<Order> getByIdMayErr(@PathVariable long id, @RequestHeader(value = "token", required = false)String token) {
+        logger.info("request token:{}", token);
+
+        int ran = new Random().nextInt(10);
+        if(ran % 2 == 0) {
+            throw new NullPointerException("random exception");
+        }
         return service.getOrder(id);
     }
 

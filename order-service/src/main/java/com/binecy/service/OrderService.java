@@ -67,9 +67,11 @@ public class OrderService {
         // 阻塞
         /*try {
 
-            ResponseEntity<Warehouse> warehouse = warehouseFuture.get();
+            ResponseEntity<Warehouse> warehouseRes = warehouseFuture.get();
             ResponseEntity<List<Goods>> goodsRes = goodsFuture.get();
-
+            order.setWarehouse(warehouseRes.getBody());
+            order.setGoods(goodsRes.getBody());
+            return order;
         } catch (Exception e) {
             logger.error("get result err", e);
         }*/
@@ -104,9 +106,10 @@ public class OrderService {
     }
 
     public Mono<Order> getOrder(long orderId) {
+        logger.info("getOrder start");
         Mono<Order> orderMono = mockOrderMono(orderId);
 
-        return orderMono.flatMap(o -> {
+        orderMono  = orderMono.flatMap(o -> {
             Mono<Warehouse> warehouseMono =  getMono("http://warehouse-service/warehouse/mock/"+ o.getWarehouseId(),
                     Warehouse.class).onErrorReturn(new Warehouse());
             Flux<Goods> goodsFlux = getFlux("http://goods-service/goods/mock/list?ids=" +
@@ -122,6 +125,9 @@ public class OrderService {
             });
 
         });
+
+        logger.info("getOrder end");
+        return orderMono;
     }
 
     private <T> Mono<T> getMono(String url, Class<T> resType) {

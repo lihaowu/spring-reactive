@@ -77,34 +77,6 @@ public class OrderService {
         }*/
     }
 
-    public Mono<Order> getOrderInLabel(long orderId) {
-        Mono<Order> orderMono = mockOrderMono(orderId);
-
-        return orderMono.zipWhen(o -> getMono("http://warehouse-service/warehouse/mock/" + o.getWarehouseId(), Warehouse.class), (o, w) -> {
-            o.setWarehouse(w);
-            return o;
-        }).zipWhen(o -> getFlux("http://goods-service/goods/mock/list?ids=" +
-                StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel(), Goods.class)
-                .filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
-            o.setGoods(gs);
-            return o;
-        });
-    }
-
-    public Mono<Order> getOrder(long orderId, long warehouseId, List<Long> goodsIds) {
-        Mono<Order> orderMono = mockOrderMono(orderId);
-
-        return orderMono.zipWith(getMono("http://warehouse-service/warehouse/mock/" + warehouseId, Warehouse.class), (o, w) -> {
-            o.setWarehouse(w);
-            return o;
-        }).zipWith(getFlux("http://goods-service/goods/mock/list?ids=" +
-                StringUtils.join(goodsIds, ","), Goods.class)
-                .filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
-            o.setGoods(gs);
-            return o;
-        });
-    }
-
     public Mono<Order> getOrder(long orderId) {
         logger.info("getOrder start");
         Mono<Order> orderMono = mockOrderMono(orderId);
@@ -130,6 +102,39 @@ public class OrderService {
         return orderMono;
     }
 
+    public Mono<Order> getOrder(long orderId, long warehouseId, List<Long> goodsIds) {
+        Mono<Order> orderMono = mockOrderMono(orderId);
+
+        return orderMono.zipWith(getMono("http://warehouse-service/warehouse/mock/" + warehouseId, Warehouse.class), (o, w) -> {
+            o.setWarehouse(w);
+            return o;
+        }).zipWith(getFlux("http://goods-service/goods/mock/list?ids=" +
+                StringUtils.join(goodsIds, ","), Goods.class)
+                .filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
+            o.setGoods(gs);
+            return o;
+        });
+    }
+
+    public Mono<Order> getOrderInLabel(long orderId) {
+        Mono<Order> orderMono = mockOrderMono(orderId);
+
+        return orderMono.zipWhen(o -> getMono("http://warehouse-service/warehouse/mock/" + o.getWarehouseId(), Warehouse.class), (o, w) -> {
+            o.setWarehouse(w);
+            return o;
+        }).zipWhen(o -> getFlux("http://goods-service/goods/mock/list?ids=" +
+                StringUtils.join(o.getGoodsIds(), ",") + "&label=" + o.getWarehouse().getLabel(), Goods.class)
+                .filter(g -> g.getPrice() > 10).take(5).collectList(), (o, gs) -> {
+            o.setGoods(gs);
+            return o;
+        });
+    }
+
+    public Mono<Order> saveOrder(Order order) {
+        logger.info("save order >>> {}", order);
+        return Mono.just(order);
+    }
+
     private <T> Mono<T> getMono(String url, Class<T> resType) {
         return webClient
                 .get()
@@ -141,6 +146,30 @@ public class OrderService {
                 })
                 ;
 
+    }
+
+
+    private <T> T syncGetMono(String url, Class<T> resType) {
+        return webClient
+                .get()
+
+                .uri(url)
+                .retrieve()
+
+                .bodyToMono(resType).block();
+
+    }
+
+
+    private <T> Mono<T> getMonoWithInfo(String url, Class<T> resType) {
+        return webClient
+                .get()
+
+                .uri(url)
+                .exchangeToMono(response -> {
+                    logger.info("request url:{},statusCode:{},headers:{}", url, response.statusCode(), response.headers());
+                    return response.bodyToMono(resType);
+                });
     }
 
     private <T> Flux<T> getFlux(String url, Class<T> resType) {

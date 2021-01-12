@@ -28,9 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 @Configuration
-//@EnableWebFlux
+@EnableWebFlux
 public class WebConfig implements WebFluxConfigurer {
 
 //    @Override
@@ -78,3 +77,4 @@ public class WebConfig implements WebFluxConfigurer {
 //                        HandlerTypePredicate.forAnnotation(RestController.class));
 //    }
 }
+

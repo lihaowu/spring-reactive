@@ -17,14 +17,31 @@ import java.util.Random;
 public class OrderController {
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
-
     @Autowired
     private OrderService service;
+
+    @GetMapping("/rest/{id}")
+    public DeferredResult<Order> restGetId(@PathVariable long id) {
+        DeferredResult<Order> rs = new DeferredResult<Order>();
+        service.getOrderByRest(rs, id);
+        return rs;
+    }
+
+    @GetMapping("/")
+    public Mono<Order> get(@RequestParam long id, @RequestParam long warehouseId, @RequestParam List<Long> goodIds) {
+        return service.getOrder(id, warehouseId, goodIds);
+    }
 
     @GetMapping("/{id}")
     public Mono<Order> getById(@PathVariable long id) {
         return service.getOrder(id);
     }
+
+    @GetMapping("/label/{id}")
+    public Mono<Order> getInLabel(@PathVariable long id) {
+        return service.getOrderInLabel(id);
+    }
+
 
     @GetMapping("/mayerr/{id}")
     public Mono<Order> getByIdMayErr(@PathVariable long id, @RequestHeader(value = "token", required = false)String token) {
@@ -37,21 +54,8 @@ public class OrderController {
         return service.getOrder(id);
     }
 
-    @GetMapping("/")
-    public Mono<Order> get(@RequestParam long id, @RequestParam long warehouseId, @RequestParam List<Long> goodIds) {
-        return service.getOrder(id, warehouseId, goodIds);
-    }
-
-    @GetMapping("/label/{id}")
-    public Mono<Order> getInLabel(@PathVariable long id) {
-        return service.getOrderInLabel(id);
-    }
-
-
-    @GetMapping("/rest/{id}")
-    public DeferredResult<Order> restGetId(@PathVariable long id) {
-        DeferredResult<Order> rs = new DeferredResult<Order>();
-        service.getOrderByRest(rs, id);
-        return rs;
+    @PostMapping("/")
+    public Mono<Order> saveOrder(@RequestBody Order order) {
+        return service.saveOrder(order);
     }
 }

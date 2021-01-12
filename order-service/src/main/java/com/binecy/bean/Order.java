@@ -55,4 +55,15 @@ public class Order {
     public void setGoods(List<Goods> goods) {
         this.goods = goods;
     }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "id=" + id +
+                ", warehouseId=" + warehouseId +
+                ", goodsIds=" + goodsIds +
+                ", warehouse=" + warehouse +
+                ", goods=" + goods +
+                '}';
+    }
 }

@@ -27,10 +27,9 @@ public class WebClientConfig {
                 .maxConnections(100)
                 .maxIdleTime(Duration.ofSeconds(30))
                 .maxLifeTime(Duration.ofSeconds(30))
-                .pendingAcquireTimeout(Duration.ofMillis(100))  // todo 作用？
-
+                .pendingAcquireTimeout(Duration.ofMillis(100))
+                .pendingAcquireMaxCount(50)
                 .build();
-
 
         HttpClient httpClient = HttpClient.create(provider)
                 .doOnError((req, err) -> {
@@ -38,12 +37,10 @@ public class WebClientConfig {
                 }, (res, err) -> {
                     log.error("err on response:{}", res.uri(), err);
                 })
-//                .responseTimeout(Duration.ofMillis(100))  // 超时
+                .responseTimeout(Duration.ofSeconds(15))  // 超时
                 ;
 
-
-        return WebClient
-                .builder().clientConnector(new ReactorClientHttpConnector(httpClient));
+        return WebClient.builder().clientConnector(new ReactorClientHttpConnector(httpClient));
     }
 
 

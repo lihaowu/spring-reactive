@@ -1,20 +1,17 @@
 package com.binecy.webflux;
 
-import org.junit.FixMethodOrder;
+
+import com.binecy.bean.Order;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
+
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/*@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)*/
+import java.util.ArrayList;
+import java.util.List;
+
+
 public class OrderTest {
 
     /*@Autowired
@@ -25,7 +22,7 @@ public class OrderTest {
 
 
     @Test
-    public void test1() {
+    public void testMayErr() {
         String result = webClient().get().uri("mayerr/1").header("token","123")
                 .retrieve().bodyToMono(String.class)
                 .block()
@@ -35,4 +32,27 @@ public class OrderTest {
         System.out.println(result);
 
     }
+
+    @Test
+    public void testPostJson() {
+        Order order = new Order();
+        order.setId(999L);
+        List<Long> goods = new ArrayList<>();
+        goods.add(1L);
+        goods.add(2L);
+        goods.add(3L);
+//        order.setGoodsIds(goods);
+        order.setWarehouseId(1L);
+        String result = webClient().post().uri("http://localhost:9004/order/").header("token", "123")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(order), Order.class)
+                .retrieve().bodyToMono(String.class)
+                .block();
+
+        System.out.println("webclient >> " + result);
+
+    }
+
+
+
 }

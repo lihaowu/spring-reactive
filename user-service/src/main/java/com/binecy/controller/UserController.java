@@ -17,15 +17,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/mock/{id}")
-    public User getUser(@PathVariable long id) {
-        logger.info("controller start");
-        return userService.mock(id);
-    }
-
-
     @GetMapping("/{id}")
-    public Mono<User> test(@PathVariable long id) {
+    public Mono<User> get(@PathVariable long id) {
         logger.info("controller start");
         return userService.get(id);
     }
@@ -34,6 +27,19 @@ public class UserController {
     public Mono<Boolean>  post(@RequestBody User user) {
         return userService.post(user);
     }
+
+    @PostMapping("/login")
+    public Mono<Long> login(@RequestBody User user) {
+        return userService.login(user);
+    }
+
+    @GetMapping("/loginNum/{day}")
+    public Mono<Long> loginNum(@PathVariable String day) {
+        return userService.loginNumber(day);
+    }
+
+
+
 
 
     @PostMapping("/stream")

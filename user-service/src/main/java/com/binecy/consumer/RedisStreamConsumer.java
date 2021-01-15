@@ -1,15 +1,23 @@
 package com.binecy.consumer;
 
 import com.binecy.bean.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.stream.*;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveStreamOperations;
+import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.concurrent.Executors;
@@ -20,7 +28,21 @@ public class RedisStreamConsumer  implements ApplicationRunner, DisposableBean {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
 
+    private Logger logger = LoggerFactory.getLogger(RedisStreamConsumer.class);
+
+    // channel: channel:stream:user
+    // group:user-service
+    // consumer-1
     StreamMessageListenerContainer<String, ObjectRecord<String, User>> container;
+
+    private static final String STREAM_CHANNEL = "channel:stream:user";
+    private static final String STREAM_GROUP = "user-service";
+    private static final String STREAM_CONSUMER = "consumer-1";
+
+    @Autowired
+    @Qualifier("reactiveRedisTemplate")
+    private ReactiveRedisTemplate redisTemplate;
+
     public void run(ApplicationArguments args) throws Exception {
 
         // 需要手动创建一个消费组 xgroup create channel:stream:user user-service $
@@ -34,10 +56,13 @@ public class RedisStreamConsumer  implements ApplicationRunner, DisposableBean {
 
         container = StreamMessageListenerContainer.create(redisConnectionFactory, options);
 
-        container.receive(Consumer.from("user-service", "consumer-1"),
-                StreamOffset.create("channel:stream:user", ReadOffset.lastConsumed()),
-                new StreamMessageListener());
-        container.start();
+        prepareChannelAndGroup(redisTemplate.opsForStream(), STREAM_CHANNEL , STREAM_GROUP)
+                .subscribe(stream -> {
+            container.receive(Consumer.from(STREAM_GROUP, STREAM_CONSUMER),
+                    StreamOffset.create(STREAM_CHANNEL, ReadOffset.lastConsumed()),
+                    new StreamMessageListener());
+            container.start();
+        });
     }
 
     @Override
@@ -45,6 +70,14 @@ public class RedisStreamConsumer  implements ApplicationRunner, DisposableBean {
         container.stop();
     }
 
+
+    private Mono<StreamInfo.XInfoStream> prepareChannelAndGroup(ReactiveStreamOperations<String, ?, ?> ops, String channel, String group) {
+        // info查询channel内容，channel不存在，调用onErrorResume给定方法
+        return ops.info(channel).onErrorResume(err -> {
+            logger.warn("check channel err:{}", err.getMessage());
+            return ops.createGroup(channel, group).flatMap(s -> ops.info(channel));
+        });
+    }
 }
 
 

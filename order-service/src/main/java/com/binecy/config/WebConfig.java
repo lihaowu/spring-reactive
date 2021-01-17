@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 @Configuration
-@EnableWebFlux
 public class WebConfig implements WebFluxConfigurer {
 
 //    @Override

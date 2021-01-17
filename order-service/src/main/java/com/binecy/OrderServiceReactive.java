@@ -15,8 +15,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication
 public class OrderServiceReactive
 {
-    // post http://localhost:9301/actuator/refresh
-    // https://zhuanlan.zhihu.com/p/92460075
     public static void main( String[] args )
     {
         new SpringApplicationBuilder(

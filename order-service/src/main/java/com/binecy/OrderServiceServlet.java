@@ -13,12 +13,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication
 public class OrderServiceServlet
 {
-
-
-    // https://projectreactor.io/docs/core/release/reference/#flux
-    // https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-client-builder
-
-    // post http://localhost:9301/actuator/refresh
     public static void main( String[] args )
     {
         new SpringApplicationBuilder(

@@ -10,6 +10,10 @@ public class User {
     private Double deliveryAddressLon;
     // 收货地址维度
     private Double deliveryAddressLat;
+    // 最新签到日
+    private String lastSigninDay;
+    // 积分
+    private Integer score;
 
     private List<Rights> rights;
 
@@ -68,5 +72,35 @@ public class User {
 
     public void setDeliveryAddressLat(Double deliveryAddressLat) {
         this.deliveryAddressLat = deliveryAddressLat;
+    }
+
+    public String getLastSigninDay() {
+        return lastSigninDay;
+    }
+
+    public void setLastSigninDay(String lastSigninDay) {
+        this.lastSigninDay = lastSigninDay;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", label='" + label + '\'' +
+                ", deliveryAddressLon=" + deliveryAddressLon +
+                ", deliveryAddressLat=" + deliveryAddressLat +
+                ", lastSigninDay='" + lastSigninDay + '\'' +
+                ", score=" + score +
+                ", rights=" + rights +
+                '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.binecy.controller;
 
+import com.binecy.bean.Rights;
 import com.binecy.bean.User;
 import com.binecy.service.UserService;
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -19,7 +21,6 @@ public class UserController {
 
     @GetMapping("/{id}")
     public Mono<User> get(@PathVariable long id) {
-        logger.info("controller start");
         return userService.get(id);
     }
 
@@ -28,9 +29,9 @@ public class UserController {
         return userService.post(user);
     }
 
-    @PostMapping("/login")
-    public Mono<Long> login(@RequestBody User user) {
-        return userService.login(user);
+    @PostMapping("/login/{id}")
+    public Mono<Long> login(@PathVariable long id) {
+        return userService.login(id);
     }
 
     @GetMapping("/loginNum/{day}")
@@ -39,11 +40,29 @@ public class UserController {
     }
 
 
+    @GetMapping("/initWarehouse")
+    public void initWarehouse() {
+        userService.initWarehouse();
+    }
 
+    @PostMapping("/signin/{id}")
+    public Flux<String> signIn(@PathVariable long id) {
+        userService.addSignInFlag(id);
+        return userService.addScore(id);
+    }
 
+    @GetMapping("/signin/{id}")
+    public Mono<Boolean> hasSignIn(@PathVariable long id) {
+        return userService.hasSignInOnWeek(id);
+    }
 
-    @PostMapping("/stream")
-    public Mono<RecordId>  addStreamUser(@RequestBody User user) {
-        return userService.addStreamUser(user);
+    @GetMapping("/warehouse")
+    public Flux getWarehouse(@RequestParam long id, @RequestParam double dist) {
+        return userService.getWarehouseInDist(id, dist);
+    }
+
+    @PostMapping("/rights")
+    public Mono<RecordId> addRights(@RequestBody Rights rights) {
+        return userService.addRights(rights);
     }
 }

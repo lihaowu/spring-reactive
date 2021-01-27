@@ -13,6 +13,6 @@ public class UserServiceReactive {
     public static void main(String[] args) {
         new SpringApplicationBuilder(
                 UserServiceReactive.class)
-                .web(WebApplicationType.SERVLET).run(args);
+                .web(WebApplicationType.REACTIVE).run(args);
     }
 }

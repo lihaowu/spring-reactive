@@ -12,10 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class OrderTest {
+public class OrderServiceTest {
 
-    /*@Autowired
-    private WebTestClient webTestClient;*/
     public WebClient webClient() {
         return WebClient.builder().baseUrl("http://localhost:9004/order/").build();
     }
@@ -25,9 +23,7 @@ public class OrderTest {
     public void testMayErr() {
         String result = webClient().get().uri("mayerr/1").header("token","123")
                 .retrieve().bodyToMono(String.class)
-                .block()
-
-                ;
+                .block();
 
         System.out.println(result);
 

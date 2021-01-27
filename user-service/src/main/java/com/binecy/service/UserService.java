@@ -31,7 +31,7 @@ public class UserService {
     @Qualifier("reactiveRedisTemplate")
     private ReactiveRedisTemplate redisTemplate;
 
-    public Mono<Boolean>  post(User user) {
+    public Mono<Boolean>  save(User user) {
         // 使用散列保存user
         ReactiveHashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
         Mono<Boolean>  userRs = opsForHash.putAll("user:" + user.getId(), beanToMap(user));
@@ -63,12 +63,12 @@ public class UserService {
     // 统计每天登陆人数
     public Mono<Long>  login(long userId) {
         ReactiveHyperLogLogOperations<String, Long> opsForHyperLogLog = redisTemplate.opsForHyperLogLog();
-        return opsForHyperLogLog.add("user-login-number:" + LocalDateTime.now().toString().substring(0, 10), userId);
+        return opsForHyperLogLog.add("user:login:number:" + LocalDateTime.now().toString().substring(0, 10), userId);
     }
 
     public Mono<Long> loginNumber(String day) {
         ReactiveHyperLogLogOperations<String, Long> opsForHyperLogLog = redisTemplate.opsForHyperLogLog();
-        return opsForHyperLogLog.size("user-login-number:" + day);
+        return opsForHyperLogLog.size("user:login:number:" + day);
     }
 
     public void initWarehouse() {
@@ -77,11 +77,9 @@ public class UserService {
 
         for(int i = 0; i < 10; i++) {
             geo.add("warehouse:address",
-                    new Point(112 + random.nextInt(2) + random.nextDouble(),
-                            22 + random.nextInt(2) + random.nextDouble()),
-                    "warehouse:" + i).subscribe(l -> {
-                logger.info("add warehouse:{}", l);
-            });
+                    new Point(112 + random.nextInt(2) + random.nextDouble(), 22 + random.nextInt(2) + random.nextDouble()),
+                    "warehouse:" + i)
+                .subscribe(l -> logger.info("add warehouse:{}", l));
         }
     }
 
@@ -97,21 +95,26 @@ public class UserService {
         });
     }
 
+    public Flux getWarehouseInDist(User u, double dist) {
+        ReactiveGeoOperations<String, String> geo = redisTemplate.opsForGeo();
+        Circle circle = new Circle(new Point(u.getDeliveryAddressLon(), u.getDeliveryAddressLat()), dist);
+        RedisGeoCommands.GeoRadiusCommandArgs args =
+                RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs().includeDistance().sortAscending();
+        return geo.radius("warehouse:address", circle, args);
+    }
+
     // 统计每周的用户签到情况
     public void addSignInFlag(long userId) {
-        String key = "user:signIn:" + LocalDateTime.now().getDayOfYear()/7 + (userId >> 6);
+        String key = "user:signIn:" + LocalDateTime.now().getDayOfYear()/7 + (userId >> 16);
         redisTemplate.opsForValue().setBit(
-                key,
-                userId & 0xffffff , true)
-        .subscribe(b -> {
-            logger.info("set:{},result:{}", key, b);
-        });
+                key, userId & 0xffff , true)
+        .subscribe(b -> logger.info("set:{},result:{}", key, b));
     }
 
     // 获取给定用户本周是否签到
     public Mono<Boolean>  hasSignInOnWeek(long userId) {
-        return redisTemplate.opsForValue().getBit("user:signIn:" + LocalDateTime.now().getDayOfYear()/7 + (userId >> 6),
-                userId & 0xffffff);
+        return redisTemplate.opsForValue().getBit("user:signIn:" + LocalDateTime.now().getDayOfYear()/7 + (userId >> 16),
+                userId & 0xffff);
     }
 
     // 前端时将用户积分加1
@@ -123,7 +126,6 @@ public class UserService {
         keys.add(LocalDateTime.now().toString().substring(0, 10));
         return redisTemplate.execute(script, keys);
     }
-
 
     // 添加一个权益
     // 通过stream实现

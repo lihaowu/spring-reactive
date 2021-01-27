@@ -5,6 +5,7 @@ import java.util.List;
 public class User {
     private long id;
     private String name;
+    // 标签
     private String label;
     // 收货地址经度
     private Double deliveryAddressLon;

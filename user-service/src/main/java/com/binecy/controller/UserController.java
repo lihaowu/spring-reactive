@@ -26,7 +26,7 @@ public class UserController {
 
     @PostMapping
     public Mono<Boolean>  post(@RequestBody User user) {
-        return userService.post(user);
+        return userService.save(user);
     }
 
     @PostMapping("/login/{id}")

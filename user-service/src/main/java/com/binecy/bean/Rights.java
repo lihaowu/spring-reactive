@@ -1,6 +1,8 @@
 package com.binecy.bean;
 
-public class Rights {
+import java.io.Serializable;
+
+public class Rights  implements Serializable {
     private Long id;
     private Long userId;
     private String name;

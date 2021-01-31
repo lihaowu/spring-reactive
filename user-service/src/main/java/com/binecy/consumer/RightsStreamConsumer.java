@@ -27,19 +27,19 @@ public class RightsStreamConsumer implements ApplicationRunner, DisposableBean {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
 
-    // channel: stream:user:rights
-    // group:user-service
-    // consumer-1
     private StreamMessageListenerContainer<String, ObjectRecord<String, Rights>> container;
-
-    private static final String STREAM_CHANNEL = "stream:user:rights";
+    // Stream队列
+    private static final String STREAM_KEY = "stream:user:rights";
+    // 消费组
     private static final String STREAM_GROUP = "user-service";
+    // 消费者
     private static final String STREAM_CONSUMER = "consumer-1";
 
     @Autowired
     @Qualifier("reactiveRedisTemplate")
     private ReactiveRedisTemplate redisTemplate;
 
+    @Override
     public void run(ApplicationArguments args) throws Exception {
 
         StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, ObjectRecord<String, Rights>> options =
@@ -49,17 +49,18 @@ public class RightsStreamConsumer implements ApplicationRunner, DisposableBean {
                         .pollTimeout(Duration.ZERO) //阻塞式轮询
                         .targetType(Rights.class) //目标类型（消息内容的类型）
                         .build();
-
+        // 创建一个消息监听容器
         container = StreamMessageListenerContainer.create(redisConnectionFactory, options);
 
-        prepareChannelAndGroup(redisTemplate.opsForStream(), STREAM_CHANNEL , STREAM_GROUP)
+        // prepareStreamAndGroup查找Stream信息，如果不存在，则创建Stream
+        prepareStreamAndGroup(redisTemplate.opsForStream(), STREAM_KEY , STREAM_GROUP)
                 .subscribe(stream -> {
-            // 处理stream
-            container.receive(Consumer.from(STREAM_GROUP, STREAM_CONSUMER),
-                    StreamOffset.create(STREAM_CHANNEL, ReadOffset.lastConsumed()),
-                    new StreamMessageListener());
-            container.start();
-        });
+                    // 为Stream创建一个消费者，并绑定处理类
+                    container.receive(Consumer.from(STREAM_GROUP, STREAM_CONSUMER),
+                            StreamOffset.create(STREAM_KEY, ReadOffset.lastConsumed()),
+                            new StreamMessageListener());
+                    container.start();
+                });
     }
 
     @Override
@@ -67,16 +68,17 @@ public class RightsStreamConsumer implements ApplicationRunner, DisposableBean {
         container.stop();
     }
 
-    // 如果stream不存在，需要先创建
-    private Mono<StreamInfo.XInfoStream> prepareChannelAndGroup(ReactiveStreamOperations<String, ?, ?> ops, String channel, String group) {
-        // info查询channel内容，channel不存在，调用onErrorResume给定方法
-        return ops.info(channel).onErrorResume(err -> {
-            logger.warn("check channel err:{}", err.getMessage());
-            // 创建stream
-            return ops.createGroup(channel, group).flatMap(s -> ops.info(channel));
+    // 查找Stream信息，如果不存在，则创建Stream
+    private Mono<StreamInfo.XInfoStream> prepareStreamAndGroup(ReactiveStreamOperations<String, ?, ?> ops, String stream, String group) {
+        // info方法查询Stream信息，如果该Stream不存在，底层会报错，这时会调用onErrorResume方法。
+        return ops.info(stream).onErrorResume(err -> {
+            logger.warn("query stream err:{}", err.getMessage());
+            // createGroup方法创建Stream
+            return ops.createGroup(stream, group).flatMap(s -> ops.info(stream));
         });
     }
 
+    // 消息处理对象
     class  StreamMessageListener implements StreamListener<String, ObjectRecord<String, Rights>> {
         public void onMessage(ObjectRecord<String, Rights> message) {
             // 处理消息
@@ -89,5 +91,4 @@ public class RightsStreamConsumer implements ApplicationRunner, DisposableBean {
         }
     }
 }
-
 

@@ -1,4 +1,4 @@
-package com.binecy;
+package com.binecy.simple;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,14 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
 import reactor.kafka.sender.SenderRecord;
 
-public class SampleProducer {
+public class SimpleProducer {
 
-    private static final Logger log = LoggerFactory.getLogger(SampleProducer.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(SimpleProducer.class.getName());
 
     private static final String BOOTSTRAP_SERVERS = "172.17.0.2:9092,172.17.0.3:9092,172.17.0.4:9092";
     private static final String TOPIC = "topic1";
@@ -31,7 +30,7 @@ public class SampleProducer {
     private final KafkaSender<Integer, String> sender;
     private final SimpleDateFormat dateFormat;
 
-    public SampleProducer(String bootstrapServers) {
+    public SimpleProducer(String bootstrapServers) {
 
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -80,7 +79,7 @@ public class SampleProducer {
     public static void main(String[] args) throws Exception {
         int count = 5;
         CountDownLatch latch = new CountDownLatch(count);
-        SampleProducer producer = new SampleProducer(BOOTSTRAP_SERVERS);
+        SimpleProducer producer = new SimpleProducer(BOOTSTRAP_SERVERS);
         producer.sendMessages(TOPIC, count, latch);
         latch.await(10, TimeUnit.SECONDS);
         producer.close();

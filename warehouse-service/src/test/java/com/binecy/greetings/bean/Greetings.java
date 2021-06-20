@@ -1,4 +1,4 @@
-package com.binecy.greetings;
+package com.binecy.greetings.bean;
 
 public class Greetings {
     private long timestamp;

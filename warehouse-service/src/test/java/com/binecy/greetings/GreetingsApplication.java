@@ -1,4 +1,4 @@
-package com.binecy;
+package com.binecy.greetings;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,8 +10,10 @@ public class GreetingsApplication {
     // https://github.com/FJiayang/spring-cloud-stream-rabbit-example
 
     // http://localhost:9006/greetings?message=1234
+
+    // https://github.com/spring-cloud/spring-cloud-stream/blob/main/docs/src/main/asciidoc/spring-cloud-stream.adoc#functional-composition
     public static void main(String[] args) {
         SpringApplication.run(GreetingsApplication.class, args);
     }
-
+    // https://github.com/apache/kafka/blob/2.8/config/kraft/README.md
 }

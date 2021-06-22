@@ -33,7 +33,7 @@ public class WarehouseConsumer {
         new ReactiveKafkaConsumerTemplate(options)
                 .receiveAutoAck()
                 .subscribe(record -> {
-                    logger.info("Warehouse Record:" + record);
+                    logger.info("Receive Warehouse Record:" + record);
 
                 });
     }

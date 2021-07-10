@@ -7,7 +7,7 @@ public class DeliveryCompany {
     @Id
     private long id;
     private String name;
-    private String label;
+//    private String label;
 
     public DeliveryCompany() {
     }

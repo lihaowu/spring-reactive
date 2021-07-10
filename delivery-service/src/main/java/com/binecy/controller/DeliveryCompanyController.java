@@ -3,7 +3,6 @@ package com.binecy.controller;
 import com.binecy.bean.DeliveryCompany;
 import com.binecy.service.DeliveryCompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,31 +15,63 @@ public class DeliveryCompanyController {
     @Autowired
     private DeliveryCompanyService service;
 
-    @GetMapping("/{id}")
-    public Mono<DeliveryCompany> getById(@PathVariable long id) {
-        return service.getById(id);
-    }
-
-
-    @GetMapping("/")
-    public Flux<DeliveryCompany> get(@RequestParam String name) {
-        return service.getByName(name);
-    }
-
-    @GetMapping("/list")
-    public Flux<DeliveryCompany> getByIds(@RequestParam List<Long> ids) {
-        return service.getByIds(ids);
-    }
-
     @PostMapping
     public Mono<DeliveryCompany> getById(@RequestBody DeliveryCompany company) {
         return service.save(company);
     }
 
-    @PutMapping
-    public Mono<DeliveryCompany> update(@RequestBody DeliveryCompany company) {
-        return service.update(company);
+
+    @GetMapping("/{id}")
+    public Mono<DeliveryCompany> getById(@PathVariable long id) {
+        return service.getById(id);
+    }
+
+    @GetMapping
+    public Flux<DeliveryCompany> getByName(@RequestParam String name) {
+        return service.getByName(name);
+    }
+
+    @GetMapping("/start/{id}")
+    public Flux<DeliveryCompany> findByIdGreaterThan(@PathVariable long id) {
+        return service.findByIdGreaterThan(id);
+    }
+
+    // http://localhost:9005/delivery/company/in?names=sf,jd
+    @GetMapping("/in")
+    public Flux<DeliveryCompany> findByNameIn(@RequestParam List<String> names) {
+        return service.findByNameIn(names);
+    }
+
+    // http://localhost:9005/delivery/company/start/name/s
+    @GetMapping("/start/name/{name}")
+    public Flux<DeliveryCompany> findByIdGreaterThan(@PathVariable String name) {
+        return service.findByNameStartingWith(name);
+    }
+
+    // http://localhost:9005/delivery/company/v2/?name=sf
+    @GetMapping("/v2")
+    public Flux<DeliveryCompany> getByName2(@RequestParam String name) {
+        return service.getByName2(name);
+    }
+
+    @GetMapping("/v2/list")
+    public Flux<DeliveryCompany> getByIds(@RequestParam List<Long> ids) {
+        return service.getByIds2(ids);
+    }
+
+    @PutMapping("/v2")
+    public Mono<Integer> update2(@RequestBody DeliveryCompany company) {
+        return service.update2(company);
     }
 
 
+    @GetMapping("/v3")
+    public Flux<DeliveryCompany> getByName3(@RequestParam String name) {
+        return service.getByName3(name);
+    }
+
+    @PutMapping("/v3")
+    public Mono<Integer> update3(@RequestBody DeliveryCompany company) {
+        return service.update3(company);
+    }
 }

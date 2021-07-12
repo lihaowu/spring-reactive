@@ -29,7 +29,7 @@ public class DeliveryCompanyService {
         return repository.save(company);
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Flux<DeliveryCompany> save(List<DeliveryCompany> companyList) {
         Flux<DeliveryCompany> result = Flux.just();
         for (DeliveryCompany deliveryCompany : companyList) {

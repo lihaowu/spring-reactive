@@ -3,6 +3,7 @@ package com.binecy.controller;
 import com.binecy.bean.DeliveryCompany;
 import com.binecy.service.DeliveryCompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,11 +16,16 @@ public class DeliveryCompanyController {
     @Autowired
     private DeliveryCompanyService service;
 
+    // company不能存在id
     @PostMapping
-    public Mono<DeliveryCompany> getById(@RequestBody DeliveryCompany company) {
+    public Mono<DeliveryCompany> save(@RequestBody DeliveryCompany company) {
         return service.save(company);
     }
 
+    @PostMapping("/batch")
+    public Mono<Boolean> save(@RequestBody List<DeliveryCompany> companys) {
+        return service.save(companys);
+    }
 
     @GetMapping("/{id}")
     public Mono<DeliveryCompany> getById(@PathVariable long id) {
@@ -47,6 +53,21 @@ public class DeliveryCompanyController {
     public Flux<DeliveryCompany> findByIdGreaterThan(@PathVariable String name) {
         return service.findByNameStartingWith(name);
     }
+
+
+    @GetMapping("/start/limit/{id}")
+    public Flux<DeliveryCompany> findFirst2ByIdGreaterThanOrEquals(@PathVariable long id) {
+        return service.findFirst2ByIdGreaterThanOrEquals(id);
+    }
+
+    // page从0开始
+    @GetMapping("/start/page/{id}")
+    public Flux<DeliveryCompany> findFirst2ByIdGreaterThanOrEquals(@PathVariable long id,
+                                                                   @RequestParam int page,
+                                                                   @RequestParam int size) {
+        return service.findFirst2ByIdGreaterThanOrEquals(id, PageRequest.of(page, size));
+    }
+
 
     // http://localhost:9005/delivery/company/v2/?name=sf
     @GetMapping("/v2")

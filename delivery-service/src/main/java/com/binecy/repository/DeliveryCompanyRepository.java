@@ -1,6 +1,8 @@
 package com.binecy.repository;
 
 import com.binecy.bean.DeliveryCompany;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
@@ -11,10 +13,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-
 @Repository
-public interface DeliveryCompanyRepository extends R2dbcRepository<DeliveryCompany,Long> {
-
+public interface DeliveryCompanyRepository extends R2dbcRepository<DeliveryCompany,Long>{
     @Query("select  id,name from delivery_company where id in  (:ids)")
     Flux<DeliveryCompany> findByIds2(List<Long> ids);
 
@@ -33,4 +33,9 @@ public interface DeliveryCompanyRepository extends R2dbcRepository<DeliveryCompa
     Flux<DeliveryCompany> findByNameIn(List<String> names);
 
     Flux<DeliveryCompany> findByNameStartingWith(String start);
+
+    Flux<DeliveryCompany> findFirst2ByIdGreaterThanEqual(Long startId, Sort sort);
+
+    Flux<DeliveryCompany> findByIdGreaterThanEqual(Long startId, Pageable pageable);
+
 }

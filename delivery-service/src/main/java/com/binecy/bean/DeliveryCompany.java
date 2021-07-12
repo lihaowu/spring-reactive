@@ -7,7 +7,8 @@ public class DeliveryCompany {
     @Id
     private long id;
     private String name;
-//    private String label;
+    private String label;
+    private Integer level;
 
     public DeliveryCompany() {
     }
@@ -31,5 +32,21 @@ public class DeliveryCompany {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
     }
 }

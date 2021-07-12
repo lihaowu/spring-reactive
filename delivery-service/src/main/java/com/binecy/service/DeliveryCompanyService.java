@@ -3,11 +3,14 @@ package com.binecy.service;
 import com.binecy.bean.DeliveryCompany;
 import com.binecy.repository.DeliveryCompanyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,23 +25,25 @@ public class DeliveryCompanyService {
     @Autowired
     private DeliveryCompanyRepository repository;
 
-    public Mono<DeliveryCompany> getById(long id) {
-        return repository.findById(id);
-    }
-
-
-
-
-
-    public Flux<DeliveryCompany> getByName(String name) {
-        return repository.findByName(name);
-    }
-
     public Mono<DeliveryCompany> save(DeliveryCompany company) {
         return repository.save(company);
     }
 
+    @Transactional
+    public Mono<Boolean> save(List<DeliveryCompany> companyList) {
+        for (DeliveryCompany deliveryCompany : companyList) {
+            repository.save(deliveryCompany);
+        }
+        return Mono.just(true);
+    }
 
+    public Mono<DeliveryCompany> getById(long id) {
+        return repository.findById(id);
+    }
+
+    public Flux<DeliveryCompany> getByName(String name) {
+        return repository.findByName(name);
+    }
 
     public Flux<DeliveryCompany> findByIdGreaterThan(Long startId) {
         return repository.findByIdGreaterThan(startId);
@@ -50,6 +55,15 @@ public class DeliveryCompanyService {
 
     public Flux<DeliveryCompany> findByNameStartingWith(String start) {
         return repository.findByNameStartingWith(start);
+    }
+
+
+    public Flux<DeliveryCompany> findFirst2ByIdGreaterThanOrEquals (Long startId) {
+        return repository.findFirst2ByIdGreaterThanEqual(startId, Sort.by("id"));
+    }
+
+    public Flux<DeliveryCompany> findFirst2ByIdGreaterThanOrEquals (Long startId, Pageable pageable) {
+        return repository.findByIdGreaterThanEqual(startId, pageable);
     }
 
     public Mono<Integer> update2(DeliveryCompany company) {
@@ -79,6 +93,4 @@ public class DeliveryCompanyService {
                 .matching(Query.query(Criteria.where("id").is(company.getId())))
                 .apply(Update.update("name", company.getName()));
     }
-
-
 }

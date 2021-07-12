@@ -23,7 +23,7 @@ public class DeliveryCompanyController {
     }
 
     @PostMapping("/batch")
-    public Mono<Boolean> save(@RequestBody List<DeliveryCompany> companys) {
+    public Flux<DeliveryCompany> save(@RequestBody List<DeliveryCompany> companys) {
         return service.save(companys);
     }
 

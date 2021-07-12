@@ -29,12 +29,13 @@ public class DeliveryCompanyService {
         return repository.save(company);
     }
 
-    @Transactional
-    public Mono<Boolean> save(List<DeliveryCompany> companyList) {
+    @Transactional(rollbackFor = Throwable.class)
+    public Flux<DeliveryCompany> save(List<DeliveryCompany> companyList) {
+        Flux<DeliveryCompany> result = Flux.just();
         for (DeliveryCompany deliveryCompany : companyList) {
-            repository.save(deliveryCompany);
+            result = result.concat(result, repository.save(deliveryCompany));
         }
-        return Mono.just(true);
+        return result;
     }
 
     public Mono<DeliveryCompany> getById(long id) {

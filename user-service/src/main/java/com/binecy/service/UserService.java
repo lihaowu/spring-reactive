@@ -50,6 +50,7 @@ public class UserService {
         Flux<Map.Entry<String, String>> userFlux = opsForHash.entries("user:" + id);
 
         ReactiveListOperations<String, Rights> opsForRights = redisTemplate.opsForList();
+
         Flux<Rights> rightRs = opsForRights.range("user:rights:" + id, 0, -1);
 
         return userFlux.collectMap(e -> e.getKey(), e -> e.getValue())

@@ -21,8 +21,12 @@ public class RedisCache {
                 .withPort(6379)
                 .build();
         RedisClient redisClient = RedisClient.create(redisUri);
+        System.out.println("ProtocolVersion:   " + redisClient.getOptions().getProtocolVersion());
+
         StatefulRedisConnection<String, String> otherParty = redisClient.connect();
+
         RedisCommands<String, String> commands = otherParty.sync();
+
         StatefulRedisConnection<String, String> connection = redisClient.connect();
 // <2> 创建缓存访问器
         Map<String, String> clientCache = new ConcurrentHashMap<>(); //map 自动保存所有操作key的 key=value

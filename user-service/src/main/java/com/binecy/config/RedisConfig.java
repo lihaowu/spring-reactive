@@ -9,10 +9,14 @@ import io.lettuce.core.api.push.PushListener;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.core.cluster.api.sync.NodeSelection;
+import io.lettuce.core.cluster.models.partitions.RedisClusterNode;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.support.caching.CacheAccessor;
 import io.lettuce.core.support.caching.CacheFrontend;
 import io.lettuce.core.support.caching.ClientSideCaching;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 
@@ -42,6 +46,8 @@ public class RedisConfig {
 //        return new ReactiveStringRedisTemplate(factory);
 //    }
 
+    private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
+
     @Bean
     public RedisSerializationContext redisSerializationContext() {
         RedisSerializationContext.RedisSerializationContextBuilder builder = RedisSerializationContext.newSerializationContext();
@@ -65,36 +71,97 @@ public class RedisConfig {
     @Bean
     public LoadingCache<String, String> redisGuavaCache(RedisConnectionFactory redisConnectionFactory) {
         StatefulRedisConnection connect = getRedisConnect(redisConnectionFactory);
-        if (connect == null) {
-            // todo
-            return null;
+        if (connect != null) {
+            LoadingCache<String, String> redisCache = CacheBuilder.newBuilder()
+                    .initialCapacity(5)
+                    .maximumSize(100)
+                    .build(new CacheLoader<String, String>() {
+                        @Override
+                        public String load(String key) { // no checked exception
+                            log.info("query key:" + key);
+                            return (String)connect.sync().get(key);
+                        }
+                    });
+
+            connect.sync().clientTracking(TrackingArgs.Builder.enabled());
+            connect.addListener(message -> {
+                if (message.getType().equals("invalidate")) {
+                    List<Object> content = message.getContent(StringCodec.UTF8::decodeKey);
+
+                    List<String> keys = (List<String>) content.get(1);
+                    keys.forEach(key -> {
+                        log.info("invalidate key:" + key);
+                        redisCache.invalidate(key);
+                    });
+                }
+            });
+            return redisCache;
         }
 
-        LoadingCache<String, String> redisCache = CacheBuilder.newBuilder()
-                .initialCapacity(5)
-                .maximumSize(100)
-                .build(new CacheLoader<String, String>() {
-                    @Override
-                    public String load(String key) { // no checked exception
-                        RedisCommands<String, String> redisCommands = connect.sync();
-                        return (String)connect.sync().get(key);
-                    }
-                });
 
-        connect.sync().clientTracking(TrackingArgs.Builder.enabled());
+        StatefulRedisClusterConnection clusterConnect = getRedisClusterConnect(redisConnectionFactory);
+        if(clusterConnect != null) {
+            LoadingCache<String, String> redisCache = CacheBuilder.newBuilder()
+                    .initialCapacity(5)
+                    .maximumSize(100)
+                    .build(new CacheLoader<String, String>() {
+                        @Override
+                        public String load(String key) { // no checked exception
+                            log.info("query key:" + key);
+                            String val = (String)clusterConnect.sync().get(key);
+                            return val == null ? "" : val;
+                        }
+                    });
 
-        connect.addListener(message -> {
-            if (message.getType().equals("invalidate")) {
-                List<Object> content = message.getContent(StringCodec.UTF8::decodeKey);
 
-                List<String> keys = (List<String>) content.get(1);
-                keys.forEach(key -> {
 
-                    redisCache.invalidate(key);
-                });
-            }
-        });
-        return redisCache;
+
+
+            /*NodeSelection nodeSelection = clusterConnect.sync().nodes(node -> {
+                return true;
+            });
+
+            for(int i = 0; i < nodeSelection.size(); i++) {
+                RedisClusterNode node = nodeSelection.node(i);
+                if(node.getSlaveOf() == null) {
+                    log.info("cluster nodeId: {}", node.getNodeId());
+                    StatefulRedisConnection c2 = clusterConnect.getConnection(node.getNodeId());
+                    c2.sync().clientTracking(TrackingArgs.Builder.enabled());
+                    c2.addListener((message) -> {
+                        log.info("cluster message:{}",message);
+                        if (message.getType().equals("invalidate")) {
+                            List<Object> content = message.getContent(StringCodec.UTF8::decodeKey);
+
+                            List<String> keys = (List<String>) content.get(1);
+                            keys.forEach(key -> {
+                                log.info("invalidate key:" + key);
+                                redisCache.invalidate(key);
+                            });
+                        }
+                    });
+                }
+            }*/
+
+            clusterConnect.sync().clientTracking(TrackingArgs.Builder.enabled());
+            clusterConnect.addListener((node,message) -> {
+                log.info("cluster message:{}",message);
+                if (message.getType().equals("invalidate")) {
+                    List<Object> content = message.getContent(StringCodec.UTF8::decodeKey);
+
+                    List<String> keys = (List<String>) content.get(1);
+                    keys.forEach(key -> {
+                        log.info("invalidate key:" + key);
+                        redisCache.invalidate(key);
+                    });
+                }
+            });
+            return redisCache;
+        }
+
+
+
+
+        return null;
     }
 
     private StatefulRedisConnection getRedisConnect(RedisConnectionFactory redisConnectionFactory) {
@@ -103,10 +170,16 @@ public class RedisConfig {
             if (absClient instanceof RedisClient) {
                 return ((RedisClient) absClient).connect();
             }
+        }
+        return null;
+    }
+
+    private StatefulRedisClusterConnection getRedisClusterConnect(RedisConnectionFactory redisConnectionFactory) {
+        if(redisConnectionFactory instanceof LettuceConnectionFactory) {
+            AbstractRedisClient absClient = ((LettuceConnectionFactory) redisConnectionFactory).getNativeClient();
 
             if(absClient instanceof RedisClusterClient) {
-                StatefulRedisClusterConnection connect = ((RedisClusterClient) absClient).connect();
-
+                return ((RedisClusterClient) absClient).connect();
             }
         }
         return null;

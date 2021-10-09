@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.ExecutionException;
+
 @RestController
 @RequestMapping("/cache")
 public class CacheController {
@@ -27,7 +29,7 @@ public class CacheController {
 
 
     @GetMapping("/guava/{key}")
-    public String getInGuava(@PathVariable String key) {
-        return cacheService.get(key);
+    public String getInGuava(@PathVariable String key) throws ExecutionException {
+        return cacheService.getInGuava(key);
     }
 }

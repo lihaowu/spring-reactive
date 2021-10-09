@@ -25,12 +25,13 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class CacheService {
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
 
-    @Autowired
+    @Autowired(required = false)
     private CacheFrontend<String, String> frontend;
 
     @Autowired
@@ -44,8 +45,8 @@ public class CacheService {
         return frontend.get(key);
     }
 
-    public String getInGuava(String key) {
-        return frontend.get(key);
+    public String getInGuava(String key) throws ExecutionException {
+        return redisGuavaCache.get(key);
     }
 
 }

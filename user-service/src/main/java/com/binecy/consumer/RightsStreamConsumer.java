@@ -42,11 +42,11 @@ public class RightsStreamConsumer implements ApplicationRunner, DisposableBean {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-        /*StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, ObjectRecord<String, Rights>> options =
+        StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, ObjectRecord<String, Rights>> options =
                 StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
                         .batchSize(100) //一批次拉取的最大count数
                         .executor(Executors.newSingleThreadExecutor())  //线程池
-                        .pollTimeout(Duration.ZERO) //阻塞式轮询
+                        .pollTimeout(Duration.ofSeconds(2)) //阻塞式轮询
                         .targetType(Rights.class) //目标类型（消息内容的类型）
                         .build();
         // 创建一个消息监听容器
@@ -60,7 +60,7 @@ public class RightsStreamConsumer implements ApplicationRunner, DisposableBean {
                             StreamOffset.create(STREAM_KEY, ReadOffset.lastConsumed()),
                             new StreamMessageListener());
                     container.start();
-                });*/
+                });
     }
 
     @Override

@@ -10,6 +10,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.sync.NodeSelection;
+import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 import io.lettuce.core.cluster.models.partitions.RedisClusterNode;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.support.caching.CacheAccessor;
@@ -75,11 +76,13 @@ public class RedisConfig {
             LoadingCache<String, String> redisCache = CacheBuilder.newBuilder()
                     .initialCapacity(5)
                     .maximumSize(100)
+                    .expireAfterWrite(10, TimeUnit.SECONDS)
                     .build(new CacheLoader<String, String>() {
                         @Override
                         public String load(String key) { // no checked exception
                             log.info("query key:" + key);
-                            return (String)connect.sync().get(key);
+                            String val = (String)connect.sync().get(key);
+                            return val == null ? "" : val;
                         }
                     });
 
@@ -98,51 +101,26 @@ public class RedisConfig {
             return redisCache;
         }
 
-
+        /**
+         * 这个方式有问题，不支持cluster
         StatefulRedisClusterConnection clusterConnect = getRedisClusterConnect(redisConnectionFactory);
         if(clusterConnect != null) {
+            RedisAdvancedClusterCommands commands = clusterConnect.sync();
+
             LoadingCache<String, String> redisCache = CacheBuilder.newBuilder()
                     .initialCapacity(5)
                     .maximumSize(100)
+                    .expireAfterWrite(1, TimeUnit.SECONDS)
                     .build(new CacheLoader<String, String>() {
                         @Override
                         public String load(String key) { // no checked exception
                             log.info("query key:" + key);
-                            String val = (String)clusterConnect.sync().get(key);
+                            String val = (String)commands.get(key);
                             return val == null ? "" : val;
                         }
                     });
 
-
-
-
-
-            /*NodeSelection nodeSelection = clusterConnect.sync().nodes(node -> {
-                return true;
-            });
-
-            for(int i = 0; i < nodeSelection.size(); i++) {
-                RedisClusterNode node = nodeSelection.node(i);
-                if(node.getSlaveOf() == null) {
-                    log.info("cluster nodeId: {}", node.getNodeId());
-                    StatefulRedisConnection c2 = clusterConnect.getConnection(node.getNodeId());
-                    c2.sync().clientTracking(TrackingArgs.Builder.enabled());
-                    c2.addListener((message) -> {
-                        log.info("cluster message:{}",message);
-                        if (message.getType().equals("invalidate")) {
-                            List<Object> content = message.getContent(StringCodec.UTF8::decodeKey);
-
-                            List<String> keys = (List<String>) content.get(1);
-                            keys.forEach(key -> {
-                                log.info("invalidate key:" + key);
-                                redisCache.invalidate(key);
-                            });
-                        }
-                    });
-                }
-            }*/
-
-            clusterConnect.sync().clientTracking(TrackingArgs.Builder.enabled());
+            commands.clientTracking(TrackingArgs.Builder.enabled());
             clusterConnect.addListener((node,message) -> {
                 log.info("cluster message:{}",message);
                 if (message.getType().equals("invalidate")) {
@@ -157,9 +135,7 @@ public class RedisConfig {
             });
             return redisCache;
         }
-
-
-
+         */
 
         return null;
     }
@@ -193,9 +169,10 @@ public class RedisConfig {
             return null;
         }
 
+        CacheFrontend<String, String> frontend = null;
         Map<String, String> cacheMap = new ConcurrentHashMap<>();
 
-        CacheFrontend<String, String> frontend = ClientSideCaching.enable(
+        frontend = ClientSideCaching.enable(
                 CacheAccessor.forMap(cacheMap),
                 connect,
                 TrackingArgs.Builder.enabled());

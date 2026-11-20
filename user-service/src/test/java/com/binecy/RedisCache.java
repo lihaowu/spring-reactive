@@ -4,7 +4,6 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.TrackingArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.support.caching.CacheAccessor;
 import io.lettuce.core.support.caching.CacheFrontend;
 import io.lettuce.core.support.caching.ClientSideCaching;
